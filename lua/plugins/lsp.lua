@@ -16,56 +16,25 @@ return {
       },
     },
     -- This is autocompletion
-    "hrsh7th/nvim-cmp",
-    -- This lets autocompletion use lsp
-    "hrsh7th/cmp-nvim-lsp",
-    -- This lets autocompletion use buffer symbols
-    "hrsh7th/cmp-buffer",
-    -- lets us close parenthesis when completign function
-    'windwp/nvim-autopairs',
+    "saghen/blink.cmp",
   },
   config = function()
-    local cmp_lsp = require("cmp_nvim_lsp")
-    local capabilities = vim.tbl_deep_extend(
-      "force",
-      {},
-      vim.lsp.protocol.make_client_capabilities(),
-      cmp_lsp.default_capabilities())
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities = require("blink.cmp").get_lsp_capabilities(capabilities)
     require("mason").setup()
-    require("mason-lspconfig").setup()
-    require("mason-lspconfig").setup_handlers {
-      -- default setup for all LSP servers that don"t have an explicit handler
-      function(server_name) -- default handler (optional)
-        require("lspconfig")[server_name].setup {
-          capabilities = capabilities
-        }
-      end,
-
-      -- custom handlers
-      -- ["rust_analyzer"] = function ()
+    require("mason-lspconfig").setup({
+      ensure_installed = { "lua_ls" },
+      handlers = {
+        function(server_name) -- default handler (optional)
+          require("lspconfig")[server_name].setup({
+            capabilities = capabilities,
+          })
+        end,
+        -- custom handlers
+        -- ["rust_analyzer"] = function ()
         --   require("rust-tools").setup {}
         -- end
-      }
-
-      local cmp = require('cmp')
-      local cmp_select = { behavior = cmp.SelectBehavior.Select }
-      cmp.setup({
-        preselect = cmp.PreselectMode.None,
-        sources = cmp.config.sources({
-          { name = "nvim_lsp" },
-          { name = "buffer" },
-        }),
-        mapping = cmp.mapping.preset.insert({
-          ['<C-p>'] = cmp.mapping.select_prev_item(cmp_select),
-          ['<S-Tab>'] = cmp.mapping.select_prev_item(cmp_select),
-          ['<C-n>'] = cmp.mapping.select_next_item(cmp_select),
-          ['<Tab>'] = cmp.mapping.select_next_item(cmp_select),
-          ['<CR>'] = cmp.mapping.confirm({ select = false }),
-          ["<C-Space>"] = cmp.mapping.complete(),
-        }),
-      })
-
-      local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-      cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
-    end,
-  }
+      },
+    })
+  end,
+}
